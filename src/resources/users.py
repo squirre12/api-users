@@ -1,61 +1,87 @@
 from flask_restful import Resource
+from starlette import status
+from starlette.responses import JSONResponse
+
 from src import db
 from flask import request
 from ..models import User
 import bcrypt
 
+
 class Users(Resource):
-
-    def get(self, id=None):
-        if not id:
+    @staticmethod
+    def get(idx=None):
+        if not idx:
             users = db.session.query(User).all()
-            return [user.to_dict() for user in users], 200
-        user = db.session.query(User).filter_by(id=id).first()
+            data = [user.to_dict() for user in users]
+            return JSONResponse(content=data, status_code=status.HTTP_200_OK)
+        user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return '', 404
-        return user.to_dict(), 200
+            return JSONResponse(
+                content="Created successfully", status_code=status.HTTP_201_CREATED
+            )
+        return JSONResponse(content=user.to_dict(), status_code=status.HTTP_200_OK)
 
-    def post(self):
+    @staticmethod
+    def post():
         user_json = request.json
         if not user_json:
-            return {'message': 'wrong data'}, 400
+            return JSONResponse(content="Wrong data", status_code=status.HTTP)
         try:
             user = User(
-                username=user_json['username'],
-                email=user_json['email'],
-                password=bcrypt.hashpw(user_json['password'].encode(), bcrypt.gensalt())
+                username=user_json["username"],
+                email=user_json["email"],
+                password=bcrypt.hashpw(
+                    user_json["password"].encode(), bcrypt.gensalt()
+                ),
             )
             db.session.add(user)
             db.session.commit()
-        except(ValueError, KeyError):
-            return {'message': 'Wrong data'}, 400
-        return {'message': "Created successfully"}, 201
+        except (ValueError, KeyError):
+            return JSONResponse(
+                content="Wrong data", status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
+        return JSONResponse(
+            content="Created successfully", status_code=status.HTTP_201_CREATED
+        )
 
-    def put(self, id):
+    @staticmethod
+    def put(idx):
         user_json = request.json
         if not user_json:
-            return {'message': 'wrong data'}, 400
+            return JSONResponse(
+                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
+            )
         try:
-            db.session.query(User).filter_by(id=id).update(
+            db.session.query(User).filter_by(id=idx).update(
                 dict(
-                    username=user_json['username'],
-                    email=user_json['email'],
-                    password=bcrypt.hashpw(user_json['password'].encode(), bcrypt.gensalt())
+                    username=user_json["username"],
+                    email=user_json["email"],
+                    password=bcrypt.hashpw(
+                        user_json["password"].encode(), bcrypt.gensalt()
+                    ),
                 )
             )
-            db.session.commit
-        except(ValueError, KeyError):
-            return {'message': 'Wrong data'}, 400
-        return {'message': "Created successfully"}, 201
+            db.session.commit()
+        except (ValueError, KeyError):
+            return JSONResponse(
+                content="Wrong data", status_code=status.HTTP_204_NO_CONTENT
+            )
+        return JSONResponse(
+            content="Created successfully", status_code=status.HTTP_201_CREATED
+        )
 
-    def patch(self, id):
-        user = db.session.query(User).filter_by(id=id).first()
+    @staticmethod
+    def patch(idx):
+        user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return {'message': 'wrong data'}, 400
+            return JSONResponse(
+                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
+            )
         user_json = request.json
-        username = user_json.get('username')
-        email = user_json.get('email')
-        password = user_json.get('password')
+        username = user_json.get("username")
+        email = user_json.get("email")
+        password = user_json.get("password")
         if username:
             user.username = username
         elif email:
@@ -65,12 +91,19 @@ class Users(Resource):
 
         db.session.add(user)
         db.session.commit()
-        return {'message': "Update successfully"}, 201
+        return JSONResponse(
+            content="Update successfully", status_code=status.HTTP_201_CREATED
+        )
 
-    def delete(self, id):
-        user = db.session.query(User).filter_by(id=id).first()
+    @staticmethod
+    def delete(idx):
+        user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return {'message': 'wrong data'}, 400
+            return JSONResponse(
+                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
+            )
         db.session.delete(user)
         db.session.commit()
-        return {'message': 'Deleted successfully'}, 202
+        return JSONResponse(
+            content="Update successfully", status_code=status.HTTP_202_ACCEPTED
+        )
