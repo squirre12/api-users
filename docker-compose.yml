@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:14.5-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=user
+      - POSTGRES_DB=db
+    volumes:
+      - /var/lib/postgresql/data postgres
+  web:
+    build: .
+    container_name: flask
+    ports:
+      - "8000:5000"
+    depends_on:
+      - db
+#  pgadmin:
+#    image: dpage/pgadmin4
+#    restart: always
+#    depends_on:
+#      - db
+#    environment:
+#      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+#      - PGADMIN_DEFAULT_PASSWORD=pass
+#    ports:
+#      - "5050:80"
