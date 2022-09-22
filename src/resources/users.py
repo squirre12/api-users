@@ -1,6 +1,5 @@
 from flask_restful import Resource
 from starlette import status
-from starlette.responses import JSONResponse
 
 from src import db
 from flask import request
@@ -14,19 +13,17 @@ class Users(Resource):
         if not idx:
             users = db.session.query(User).all()
             data = [user.to_dict() for user in users]
-            return JSONResponse(content=data, status_code=status.HTTP_200_OK)
+            return data, status.HTTP_200_OK
         user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return JSONResponse(
-                content="Created successfully", status_code=status.HTTP_201_CREATED
-            )
-        return JSONResponse(content=user.to_dict(), status_code=status.HTTP_200_OK)
+            return status.HTTP_204_NO_CONTENT
+        return user.to_dict(), status.HTTP_200_OK
 
     @staticmethod
     def post():
         user_json = request.json
         if not user_json:
-            return JSONResponse(content="Wrong data", status_code=status.HTTP)
+            return "Wrong data", status.HTTP_204_NO_CONTENT
         try:
             user = User(
                 username=user_json["username"],
@@ -38,20 +35,14 @@ class Users(Resource):
             db.session.add(user)
             db.session.commit()
         except (ValueError, KeyError):
-            return JSONResponse(
-                content="Wrong data", status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
-            )
-        return JSONResponse(
-            content="Created successfully", status_code=status.HTTP_201_CREATED
-        )
+            return "Wrong data", status.HTTP_400_BAD_REQUEST
+        return "Create successfully", status.HTTP_201_CREATED
 
     @staticmethod
     def put(idx):
         user_json = request.json
         if not user_json:
-            return JSONResponse(
-                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
-            )
+            return "User doesn't exist", status.HTTP_204_NO_CONTENT
         try:
             db.session.query(User).filter_by(id=idx).update(
                 dict(
@@ -64,20 +55,14 @@ class Users(Resource):
             )
             db.session.commit()
         except (ValueError, KeyError):
-            return JSONResponse(
-                content="Wrong data", status_code=status.HTTP_204_NO_CONTENT
-            )
-        return JSONResponse(
-            content="Created successfully", status_code=status.HTTP_201_CREATED
-        )
+            return "Wrong data", status.HTTP_204_NO_CONTENT
+        return "Create successfully", status.HTTP_201_CREATED
 
     @staticmethod
     def patch(idx):
         user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return JSONResponse(
-                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
-            )
+            return "User doesn't exist", status.HTTP_204_NO_CONTENT
         user_json = request.json
         username = user_json.get("username")
         email = user_json.get("email")
@@ -91,19 +76,13 @@ class Users(Resource):
 
         db.session.add(user)
         db.session.commit()
-        return JSONResponse(
-            content="Update successfully", status_code=status.HTTP_201_CREATED
-        )
+        return "Create successfully", status.HTTP_201_CREATED
 
     @staticmethod
     def delete(idx):
         user = db.session.query(User).filter_by(id=idx).first()
         if not user:
-            return JSONResponse(
-                content="User doesn't exist", status_code=status.HTTP_204_NO_CONTENT
-            )
+            return "User doesn't exist", status.HTTP_204_NO_CONTENT
         db.session.delete(user)
         db.session.commit()
-        return JSONResponse(
-            content="Update successfully", status_code=status.HTTP_202_ACCEPTED
-        )
+        return "Update successfully", status.HTTP_202_ACCEPTED

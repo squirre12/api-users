@@ -8,6 +8,7 @@ from flask_migrate import Migrate
 
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 app.config.from_object(config.Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -20,4 +21,4 @@ SWAGGER_BLUEPRINT = get_swaggerui_blueprint(
 )
 app.register_blueprint(SWAGGER_BLUEPRINT)
 
-from src import routes, models
+from src import routes
